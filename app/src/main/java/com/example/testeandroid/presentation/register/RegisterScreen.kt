@@ -1,5 +1,5 @@
 // RegisterScreen.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.register
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
+import com.example.testeandroid.data.models.UserRegistrationRequest
 
 @Composable
 fun RegisterScreen(navController: NavHostController, userViewModel: UserViewModel = viewModel()) {

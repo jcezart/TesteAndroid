@@ -1,5 +1,5 @@
 // LoginScreen.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
 import androidx.compose.ui.platform.LocalContext
+import com.example.testeandroid.data.models.UserLoginRequest
 
 @Composable
 fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {

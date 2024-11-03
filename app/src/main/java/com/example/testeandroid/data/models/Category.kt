@@ -1,6 +1,4 @@
-package com.example.testeandroid
-
-import com.google.gson.annotations.SerializedName
+package com.example.testeandroid.data.models
 
 data class Category(
     val id: Int,

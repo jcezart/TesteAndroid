@@ -1,5 +1,5 @@
 // HomeScreen.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -21,6 +20,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.testeandroid.data.models.Book
+import com.example.testeandroid.data.models.Category
+import com.example.testeandroid.core.data.networking.RetrofitClient
+import com.example.testeandroid.core.data.local.SecureStorage
+import androidx.compose.material.icons.filled.Delete
+import coil.compose.rememberImagePainter
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +47,7 @@ fun HomeScreen(navController: NavHostController, homeViewModel: HomeViewModel = 
         homeViewModel.fetchCategories()
         homeViewModel.fetchBooks()
     }
+    val deleteBookResult by homeViewModel.deleteBookResult.observeAsState()
 
     // Filtrar livros com base na categoria selecionada
     LaunchedEffect(categoriesResult, booksResult, selectedCategoryId) {
@@ -149,8 +156,11 @@ fun HomeScreen(navController: NavHostController, homeViewModel: HomeViewModel = 
                         LazyColumn {
                             items(books) { book ->
                                 BookItem(book = book, onClick = {
-                                    // Implementar ação ao clicar no livro, como detalhar
-                                })
+                                    navController.navigate("bookDetail/${book.id}")
+                                },
+                                    onDeleteClick = {
+                                        homeViewModel.deleteBook(book.id)
+                                    })
                             }
                         }
                     }
@@ -187,16 +197,20 @@ fun CategoryItem(category: Category, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun BookItem(book: Book, onClick: () -> Unit) {
+fun BookItem(
+    book: Book,
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onClick() },
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
+                .clickable { onClick() }
                 .padding(8.dp)
         ) {
             Image(
@@ -206,7 +220,10 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                     .size(80.dp)
                     .padding(end = 8.dp)
             )
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
                 Text(
                     text = book.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -230,6 +247,15 @@ fun BookItem(book: Book, onClick: () -> Unit) {
                     )
                 }
             }
+            IconButton(
+                onClick = onDeleteClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Deletar livro"
+                )
+            }
         }
     }
 }
+

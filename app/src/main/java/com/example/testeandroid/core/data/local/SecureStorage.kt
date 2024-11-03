@@ -1,5 +1,5 @@
 // SecureStorage.kt
-package com.example.testeandroid
+package com.example.testeandroid.core.data.local
 
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences

@@ -1,11 +1,9 @@
-package com.example.testeandroid
-
-import com.google.gson.annotations.SerializedName
+package com.example.testeandroid.data.models
 
 data class Book(
     val id: Int,
     val title: String,
-    val summary: String?, // Campo opcional
+    val summary: String?,
     val author: String,
     val imageUrl: String,
     val createdAt: String,

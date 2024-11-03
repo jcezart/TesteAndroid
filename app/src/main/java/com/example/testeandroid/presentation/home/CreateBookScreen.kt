@@ -1,6 +1,7 @@
 // CreateBookScreen.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.home
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,6 +19,36 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.testeandroid.data.models.Category
+import com.example.testeandroid.data.models.CreateBookRequest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.testeandroid.core.data.networking.RetrofitClient
+import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.rememberImagePainter
+import android.net.Uri
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
+
+// Função auxiliar para converter Uri em File
+fun getFileFromUri(context: Context, uri: Uri): File? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val tempFile = File.createTempFile("upload", ".tmp", context.cacheDir)
+        val outputStream = FileOutputStream(tempFile)
+        inputStream?.copyTo(outputStream)
+        inputStream?.close()
+        outputStream.close()
+        tempFile
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +56,21 @@ fun CreateBookScreen(
     navController: NavController,
     homeViewModel: HomeViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
+    // Removido imageBase64, pois não será mais usado
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let {
+                // Apenas atualize o imageUri para exibir a imagem selecionada
+                imageUri = it
+            }
+        }
+    )
+
     // Criar um SnackbarHostState separado
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -39,7 +85,6 @@ fun CreateBookScreen(
     var title by remember { mutableStateOf("") }
     var summary by remember { mutableStateOf("") }
     var author by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
 
     // Estado para o DropdownMenu de categorias
@@ -115,18 +160,29 @@ fun CreateBookScreen(
                     )
                 )
 
-                // URL da Imagem
-                OutlinedTextField(
-                    value = imageUrl,
-                    onValueChange = { imageUrl = it },
-                    label = { Text("URL da Imagem") },
+                // Botão para selecionar a imagem
+                Button(
+                    onClick = {
+                        imagePickerLauncher.launch("image/*")
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done
+                        .padding(bottom = 16.dp)
+                ) {
+                    Text("Selecionar Imagem")
+                }
+
+                // Exibir a imagem selecionada
+                imageUri?.let { uri ->
+                    Image(
+                        painter = rememberImagePainter(data = uri),
+                        contentDescription = "Imagem selecionada",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(bottom = 16.dp)
                     )
-                )
+                }
 
                 // Categoria
                 Box(
@@ -159,7 +215,7 @@ fun CreateBookScreen(
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(
-                                text = {Text(text = category.title)},
+                                text = { Text(text = category.title) },
                                 onClick = {
                                     selectedCategory = category
                                     isDropdownExpanded = false
@@ -187,9 +243,9 @@ fun CreateBookScreen(
                             return@Button
                         }
 
-                        if (imageUrl.isBlank()) {
+                        if (imageUri == null) {
                             coroutineScope.launch {
-                                snackbarHostState.showSnackbar("A URL da imagem é obrigatória.")
+                                snackbarHostState.showSnackbar("Selecione uma imagem.")
                             }
                             return@Button
                         }
@@ -201,17 +257,40 @@ fun CreateBookScreen(
                             return@Button
                         }
 
-                        // Criar o objeto de requisição
-                        val createBookRequest = CreateBookRequest(
-                            title = title,
-                            summary = if (summary.isNotBlank()) summary else null,
-                            author = author,
-                            imageUrl = imageUrl,
-                            categoryId = selectedCategory!!.id
-                        )
+                        coroutineScope.launch {
+                            // Fazer o upload da imagem
+                            try {
+                                val imageFile = getFileFromUri(context, imageUri!!)
+                                if (imageFile != null) {
+                                    val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+                                    val multipartBody = MultipartBody.Part.createFormData("file", imageFile.name, requestFile)
 
-                        // Chamar a função de criação no ViewModel
-                        homeViewModel.createBook(createBookRequest)
+                                    // Chamar o método uploadFile
+                                    val uploadResponse = RetrofitClient.apiService.uploadFile(multipartBody)
+                                    val uploadedImageUrl = uploadResponse.url
+
+                                    if (uploadedImageUrl != null) {
+                                        // Criar o objeto de requisição com a URL da imagem
+                                        val createBookRequest = CreateBookRequest(
+                                            title = title,
+                                            summary = if (summary.isNotBlank()) summary else null,
+                                            author = author,
+                                            imageUrl = uploadedImageUrl,
+                                            categoryId = selectedCategory!!.id
+                                        )
+
+                                        // Chamar a função de criação no ViewModel
+                                        homeViewModel.createBook(createBookRequest)
+                                    } else {
+                                        snackbarHostState.showSnackbar("Erro ao obter a URL da imagem.")
+                                    }
+                                } else {
+                                    snackbarHostState.showSnackbar("Erro ao processar a imagem selecionada.")
+                                }
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar("Erro ao fazer upload da imagem: ${e.message}")
+                            }
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -253,4 +332,6 @@ fun CreateBookScreen(
             // Caso de sucesso já está tratado no DropdownMenu
         }
     }
+
+
 }

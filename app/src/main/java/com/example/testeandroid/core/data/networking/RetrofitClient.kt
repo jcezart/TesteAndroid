@@ -1,5 +1,6 @@
-package com.example.testeandroid
+package com.example.testeandroid.core.data.networking
 
+import com.example.testeandroid.data.network.ApiService
 import okhttp3.OkHttpClient
 import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
@@ -8,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
 
-    private const val BASE_URL: String = "http://45.10.163.203:9000/" // Ajuste conforme necessário
+    private const val BASE_URL: String = "http://45.10.163.203:9000/"
 
     private var authToken: String? = null
 

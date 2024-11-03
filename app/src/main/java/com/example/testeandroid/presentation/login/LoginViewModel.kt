@@ -1,5 +1,5 @@
 // LoginViewModel.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.login
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,6 +10,11 @@ import retrofit2.HttpException
 import java.io.IOException
 import android.util.Log
 import android.content.Context
+import com.example.testeandroid.core.domain.ErrorResponse
+import com.example.testeandroid.core.data.networking.RetrofitClient
+import com.example.testeandroid.core.data.local.SecureStorage
+import com.example.testeandroid.data.models.UserLoginRequest
+import com.example.testeandroid.data.models.UserLoginResponse
 
 class LoginViewModel : ViewModel() {
 

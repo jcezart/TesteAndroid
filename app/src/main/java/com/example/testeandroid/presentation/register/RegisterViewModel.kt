@@ -1,9 +1,13 @@
 // UserViewModel.kt
-package com.example.testeandroid
+package com.example.testeandroid.presentation.register
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.testeandroid.core.domain.ErrorResponse
+import com.example.testeandroid.core.data.networking.RetrofitClient
+import com.example.testeandroid.data.models.UserRegistrationRequest
+import com.example.testeandroid.data.models.UserRegistrationResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
