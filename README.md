@@ -4,7 +4,8 @@ Efetuado a criação deste APP para simular um aplicativo completo, com login, c
 
 ## :camera_flash: Screenshots
 <!-- You can add more screenshots here if you like -->
-<img src="/Screenshot_1.png.png" width="260">&emsp;<img src="/results/img2-2.png" width="260">&emsp;<img src="/results/img3-3.png" width="260">
+<img src="/Screenshot_1.png" width="260">&emsp;<img src="/results/img2-2.png" width="260">&emsp;<img src="/results/img3-3.png" width="260">
+
 
 ## Tecnologias
 * Kotlin
